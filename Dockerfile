@@ -6,7 +6,7 @@ COPY src src
 RUN mvn -B -DskipTests package
 
 FROM eclipse-temurin:17-jre-focal
-WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+ARG JAR_FILE=target/*.jar
+COPY --from=build /app/target/*.jar /app/app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
