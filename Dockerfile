@@ -1,12 +1,12 @@
-FROM eclipse-temurin:17-jdk-focal AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY pom.xml mvnw ./
-COPY .mvn .mvn
-COPY src src
+COPY pom.xml .
+COPY src ./src
 RUN mvn -B -DskipTests package
 
+# ---- STAGE 2: Ejecutar con JRE ----
 FROM eclipse-temurin:17-jre-focal
-ARG JAR_FILE=target/*.jar
-COPY --from=build /app/target/*.jar /app/app.jar
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
