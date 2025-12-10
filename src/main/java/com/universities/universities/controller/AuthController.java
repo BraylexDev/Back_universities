@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.universities.universities.configuration.JwtTokenProvider;
 import com.universities.universities.dto.CreateUserDTO;
+import com.universities.universities.dto.JwtAuthResponseDTO;
 import com.universities.universities.dto.LoginDTO;
 import com.universities.universities.dto.UserDTO;
 import com.universities.universities.model.User;
@@ -36,64 +38,75 @@ public class AuthController {
 
     @Autowired
     private ModelMapper modelMapper;
+    
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/signin")
-    public ResponseEntity<String> authenticateUser(@RequestBody LoginDTO loginDto){
-        
-
+    public ResponseEntity authenticateUser(@RequestBody LoginDTO loginDto){
         try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginDto.getUserName(), loginDto.getPassword()));
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    loginDto.getUserName(), 
+                    loginDto.getPassword()
+                )
+            );
+            
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
-
-            return new ResponseEntity<>("User signed-in successfully!.", HttpStatus.OK);
+            // Generar JWT token
+            String token = jwtTokenProvider.generateToken(authentication);
+            
+            // Obtener datos del usuario
+            User user = userRepository.findByUserName(loginDto.getUserName())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+            JwtAuthResponseDTO response = new JwtAuthResponseDTO(
+                token, 
+                user.getUserName(), 
+                user.getEmail(), 
+                user.getRol(),
+                user.getName()
+            );
+            
+            return ResponseEntity.ok(response);
+            
         } catch (BadCredentialsException e) {
-            return new ResponseEntity<>("Incorrect Credentials", HttpStatus.NOT_FOUND);
-        } catch (AuthenticationException e){
-            return new ResponseEntity<>("Error During Authentication", HttpStatus.CONFLICT);
+            return new ResponseEntity<>("Credenciales incorrectas", HttpStatus.UNAUTHORIZED);
+        } catch (AuthenticationException e) {
+            return new ResponseEntity<>("Error durante la autenticación", HttpStatus.UNAUTHORIZED);
         }
-
-        
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody CreateUserDTO createUserDto){
-
-        // add check for username exists in a DB
+    public ResponseEntity registerUser(@RequestBody CreateUserDTO createUserDto){
+        // Verificar si el usuario ya existe
         if(userRepository.existsByUserName(createUserDto.getUserName())){
-            return new ResponseEntity<>("Username is already taken!", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("¡El nombre de usuario ya está en uso!", 
+                                      HttpStatus.BAD_REQUEST);
         }
 
-        // add check for email exists in DB
+        // Verificar si el email ya existe
         if(userRepository.existsByEmail(createUserDto.getEmail())){
-            return new ResponseEntity<>("Email is already taken!", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("¡El email ya está en uso!", 
+                                      HttpStatus.BAD_REQUEST);
         }
 
-        // create user object
+        // Crear nuevo usuario
         UserDTO userdto = new UserDTO();
         userdto.setName(createUserDto.getName());
         userdto.setUserName(createUserDto.getUserName());
         userdto.setEmail(createUserDto.getEmail());
         userdto.setPassword(passwordEncoder.encode(createUserDto.getPassword()));
         userdto.setRol("ROLE_ADMIN");
-
         
         userRepository.save(convertToEntity(userdto));
-        userdto = null;
-
-        return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
+        
+        return new ResponseEntity<>("Usuario registrado exitosamente", HttpStatus.CREATED);
     }
 
-    //methods for convert entities or dto's
-    
     private User convertToEntity(UserDTO userDTO){
-        User ranking = modelMapper.map(userDTO, User.class);
-        return ranking;
+        User user = modelMapper.map(userDTO, User.class);
+        return user;
     }
-
-    /* private UserDTO convertToDto(User user){
-        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
-        return userDTO;
-    } */
 }

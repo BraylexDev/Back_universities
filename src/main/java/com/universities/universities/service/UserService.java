@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,13 +19,11 @@ import com.universities.universities.repository.UserRepository;
 @Service
 public class UserService implements UserDetailsService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public Optional<User> findByUserName(String name) {
         return userRepository.findByUserName(name);
@@ -45,11 +44,14 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByUserNameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found with username or email: " + usernameOrEmail));
-        System.out.println("loadUserByUsername");
+        
         Set<GrantedAuthority> authorities = new HashSet<>();
         authorities.add(new SimpleGrantedAuthority(user.getRol()));
 
-        return new org.springframework.security.core.userdetails.User(user.getUserName(), user.getPassword(),
-                authorities);
+        return new org.springframework.security.core.userdetails.User(
+            user.getUserName(), 
+            user.getPassword(),
+            authorities
+        );
     }
 }
