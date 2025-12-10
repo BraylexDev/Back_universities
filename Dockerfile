@@ -1,11 +1,11 @@
-FROM maven:3.9.4-eclipse-temurin-21 AS build
+FROM eclipse-temurin:17-jdk-focal AS build
 WORKDIR /app
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
 COPY src src
 RUN mvn -B -DskipTests package
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:17-jre-focal
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080

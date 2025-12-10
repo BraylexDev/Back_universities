@@ -43,9 +43,9 @@ public class WebSecutity implements WebMvcConfigurer {
                     // Endpoints públicos
                     .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/excel/datas").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/ranking/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/ranking/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/ranking/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/ranking/**").permitAll()
                     // Endpoints protegidos por admin
                     .requestMatchers(HttpMethod.POST, "/universities/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.DELETE, "/universities/**").hasRole("ADMIN")

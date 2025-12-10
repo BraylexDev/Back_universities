@@ -20,8 +20,7 @@ import com.universities.universities.service.RankingService;
 
 @RestController
 @RequestMapping("/api/ranking")
-public class RankingController {
-   
+public class RankingController {    
     private final ExcelProcessingService excelProcessingService;
     private final RankingService rankingService;
     
@@ -36,6 +35,7 @@ public class RankingController {
             @RequestParam("year") Integer year) {
         ExcelUploadResponseDto response = excelProcessingService.processExcelFile(file, year);
         
+
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
