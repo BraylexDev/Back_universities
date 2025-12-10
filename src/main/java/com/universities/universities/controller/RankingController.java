@@ -19,7 +19,7 @@ import com.universities.universities.service.ExcelProcessingService;
 import com.universities.universities.service.RankingService;
 
 @RestController
-@RequestMapping("/ranking")
+@RequestMapping("/api/ranking")
 public class RankingController {
    
     private final ExcelProcessingService excelProcessingService;
